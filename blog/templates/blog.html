@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog Posts</title>
+</head>
+<body>
+    <h1>Blog Posts</h1>
+    <label>
+        <input type="checkbox" id="filterToggle"> Filter by your country
+    </label>
+    <ul id="postList"></ul>
+
+    <script>
+        async function fetchCountry() {
+            const response = await fetch('/api/detect-country/');
+            const data = await response.json();
+            return data.country;
+        }
+
+        async function fetchBlogPosts(country = null) {
+            const url = country ? `/api/blog-posts/?country=${country}` : '/api/blog-posts/';
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.posts;
+        }
+
+        async function renderPosts(country = null) {
+            const posts = await fetchBlogPosts(country);
+            const postList = document.getElementById('postList');
+            postList.innerHTML = '';
+
+            posts.forEach(post => {
+                const li = document.createElement('li');
+                li.innerHTML = `<h2>${post.title}</h2><p>${post.content}</p><small>${post.country || 'No Country'}</small>`;
+                postList.appendChild(li);
+            });
+        }
+
+        document.getElementById('filterToggle').addEventListener('change', async function() {
+            const detectedCountry = await fetchCountry();
+            if (this.checked) {
+                renderPosts(detectedCountry);
+            } else {
+                renderPosts();
+            }
+        });
+
+        // Initial load
+        renderPosts();
+    </script>
+</body>
+</html>
